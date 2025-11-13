@@ -23,6 +23,7 @@ public class CrawlerService {
     private final WebDriverFactory webDriverFactory;
     private final CrawlerFilter crawlerFilter;
     private final CrawlerExtractor crawlerExtractor;
+    private final AIService aiService;
     private final Duration CLICK_WAIT_TIME = Duration.ofSeconds(5);
     private final String JOB_KOREA_URL = "https://www.jobkorea.co.kr";
     private final String baseUrl = JOB_KOREA_URL + "/recruit/joblist?menucode=duty";
@@ -116,10 +117,13 @@ public class CrawlerService {
                 // 6. 새 창의 wait를 전달하여 텍스트 추출
                 WebDriverWait newWindowWait = new WebDriverWait(driver, CLICK_WAIT_TIME);
                 String title = crawlerExtractor.extractTitle(newWindowWait);
-                if(title.contains("교육") || title.contains("국비") || title.contains("캠프")) continue;
+                if(title.contains("교육") || title.contains("국비") || title.contains("캠프") || title.contains("취업")) continue;
                 String resultHTML = crawlerExtractor.extractText(newWindowWait);
 
                 // 7. 파일 저장
+//                String explanation = aiService.getExplanationFromHTML(resultHTML);
+//                System.out.println(explanation);
+
                 String fileName = "page_" + pageNumber + "_item_" + i + ".html";
                 Path filePath = outputDir.resolve(fileName);
                 Files.writeString(filePath, resultHTML);
