@@ -24,6 +24,10 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    set('springAiVersion', "1.0.3")
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
@@ -31,17 +35,26 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // 1. Selenium Java API
+    // Selenium Java
     implementation 'org.seleniumhq.selenium:selenium-java:4.38.0'
 
-    // 2. WebDriver 자동 관리
+    // WebDriver
     implementation 'io.github.bonigarcia:webdrivermanager:6.3.2'
 
-    // 3. JSoup
+    // JSoup
     implementation 'org.jsoup:jsoup:1.18.1'
 
-    // 4. Tesseract OCR
+    // Tesseract OCR
     implementation 'net.sourceforge.tess4j:tess4j:5.13.0'
+
+    // Spring AI
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
 }
 
 tasks.named('test') {

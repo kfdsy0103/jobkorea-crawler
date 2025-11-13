@@ -16,6 +16,6 @@ public class CrawlerController {
 
     @GetMapping("/request-crawling")
     public void requestCrawling() {
-        crawlerService.multiThreadCrawl(List.of(1));
+        crawlerService.crawl(List.of(1));
     }
 }

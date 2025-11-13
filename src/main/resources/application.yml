@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  servlet:
+    # 파일 업로드
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 15MB
+    encoding:
+      charset: UTF-8
+      force: true
+  output:
+    ansi:
+      # 터미널에 컬러 출력
+      enabled: ALWAYS
+  ai:
+    openai:
+      # API 키
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini

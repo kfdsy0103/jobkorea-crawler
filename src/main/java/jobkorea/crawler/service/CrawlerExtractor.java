@@ -26,22 +26,6 @@ public class CrawlerExtractor {
         // 추출한 HTML 조각들을 합칠 StringBuilder 생성
         StringBuilder htmlContent = new StringBuilder();
 
-        // 보기 좋은 HTML 파일로 만들기 위해 기본 템플릿 추가
-        htmlContent.append("<!DOCTYPE html>\n");
-        htmlContent.append("<html lang=\"ko\">\n");
-        htmlContent.append("<head>\n");
-        htmlContent.append("  <meta charset=\"UTF-8\">\n");
-        htmlContent.append("  <title>채용 공고</title>\n");
-        htmlContent.append("  <style>\n");
-        htmlContent.append("    body { font-family: 'Malgun Gothic', sans-serif; margin: 20px; line-height: 1.6; }\n");
-        htmlContent.append("    .section { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 25px; overflow: hidden; }\n");
-        htmlContent.append("    .section h2 { background-color: #f5f5f5; padding: 15px 20px; margin: 0; border-bottom: 1px solid #ddd; }\n");
-        htmlContent.append("    .content { padding: 20px; }\n");
-        htmlContent.append("    h1 { color: #333; }\n");
-        htmlContent.append("  </style>\n");
-        htmlContent.append("</head>\n");
-        htmlContent.append("<body>\n");
-
         // 1. 제목
         String title = "";
         try {
