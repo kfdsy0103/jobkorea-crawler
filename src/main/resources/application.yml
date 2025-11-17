@@ -2,7 +2,6 @@ server:
   port: 8080
 
 spring:
-  mandatory-file-encoding: UTF-8
   servlet:
     # 파일 업로드
     multipart:
@@ -16,6 +15,12 @@ spring:
     ansi:
       # 터미널에 컬러 출력
       enabled: ALWAYS
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          # 정적 리소스에 대한 캐시 사용 안함
+          no-cache: true
   ai:
     openai:
       # API 키
@@ -23,3 +28,19 @@ spring:
       chat:
         options:
           model: gpt-4o-mini
+      embedding:
+        options:
+          model: text-embedding-3-small
+  mandatory-file-encoding: UTF-8
+
+logging:
+  pattern:
+    console: '[%clr(%-5level){green}] %clr(%logger.%M\(\)){cyan}: %msg%n'
+  level:
+    org:
+      springframework:
+        ai:
+          chat:
+            client:
+              advisor: DEBUG # SimpleLoggerAdvisor
+          tool: DEBUG # tool logging
