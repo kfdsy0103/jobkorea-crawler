@@ -4,11 +4,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-
 import java.util.List;
 import jobkorea.crawler.config.WebDriverFactory;
+import jobkorea.crawler.dto.Recruitment;
 import lombok.RequiredArgsConstructor;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -78,7 +77,8 @@ public class CrawlerService {
         }
     }
 
-    private void crawlPageItems(WebDriver driver, WebDriverWait wait, String originalHandle, int pageNumber, int linkCount) {
+    private void crawlPageItems(WebDriver driver, WebDriverWait wait, String originalHandle, int pageNumber,
+                                int linkCount) {
 
         Path outputDir = Paths.get("scraped_html");
         try {
@@ -117,16 +117,14 @@ public class CrawlerService {
                 // 6. 새 창의 wait를 전달하여 텍스트 추출
                 WebDriverWait newWindowWait = new WebDriverWait(driver, CLICK_WAIT_TIME);
                 String title = crawlerExtractor.extractTitle(newWindowWait);
-                if(title.contains("교육") || title.contains("국비") || title.contains("캠프") || title.contains("취업")) continue;
+                if (title.contains("교육") || title.contains("국비") || title.contains("캠프") || title.contains("취업")) {
+                    continue;
+                }
                 String resultHTML = crawlerExtractor.extractText(newWindowWait);
 
-                // 7. 파일 저장
-//                String explanation = aiService.getExplanationFromHTML(resultHTML);
-//                System.out.println(explanation);
-
-                String fileName = "page_" + pageNumber + "_item_" + i + ".html";
-                Path filePath = outputDir.resolve(fileName);
-                Files.writeString(filePath, resultHTML);
+                // 7. dto 추출
+                Recruitment dto = aiService.getExplanationText(resultHTML);
+                System.out.println(dto);
 
             } catch (Exception e) {
                 System.err.println("Index " + i + " 크롤링 중 오류 발생: " + e.getMessage());

@@ -1,24 +1,28 @@
 package jobkorea.crawler.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import jobkorea.crawler.dto.Recruitment;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class AIService {
 
     private final ChatClient chatClent;
 
-    public String getExplanationText(String text) {
+    public AIService(ChatClient.Builder clientBuilder) {
+        this.chatClent = clientBuilder.build();
+    }
+
+    public Recruitment getExplanationText(String text) {
 
         SystemMessage systemMessage = SystemMessage.builder()
                 .text("""
-                        제공되는 내용을 보고 설명문으로 작성하세요.
+                        채용 공고에 관한 크롤링 자료입니다.
+                        직무별로 요구되는 핵심 역량 (KPI)를 중점적으로 분석하세요.
+                        직무(JobType)별 핵심 역량(KPI)을 키워드 중심으로 정리하세요.
+                        회사명 앞의 (주)는 제거해주세요.
                         """)
                 .build();
 
@@ -26,11 +30,11 @@ public class AIService {
                 .text(text)
                 .build();
 
-        String answer = chatClent.prompt()
+        Recruitment dto = chatClent.prompt()
                 .messages(systemMessage, userMessage)
                 .call()
-                .content();
+                .entity(Recruitment.class);
 
-        return answer;
+        return dto;
     }
 }

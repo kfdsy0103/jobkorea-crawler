@@ -30,7 +30,7 @@ public class CrawlerFilter {
         // "검색" 버튼 클릭
         WebElement searchButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("dev-btn-search")));
         searchButton.click();
-        Thread.sleep(3000); // 한 창에 모든 요소가 존재하여 3초 대기
+        Thread.sleep(5000); // 한 창에 모든 요소가 존재하여 대기
 
         // 최신 업데이트로 정렬
         WebElement optionToClick = wait.until(ExpectedConditions.elementToBeClickable(
