@@ -40,8 +40,11 @@ dependencies {
     // JSoup
     implementation 'org.jsoup:jsoup:1.18.1'
 
-    // Tesseract OCR
-    implementation 'net.sourceforge.tess4j:tess4j:5.13.0'
+    // Google Cloud Vision API
+    implementation 'com.google.cloud:google-cloud-vision:3.34.0'
+
+    // WebClient
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

@@ -21,6 +21,8 @@ import org.springframework.stereotype.Component;
 public class CrawlerExtractor {
 
     private final String JOB_KOREA_URL = "https://www.jobkorea.co.kr";
+    private final GoogleOcrService googleOcrService;
+    private final NaverOcrService naverOcrService;
 
     public String extractText(WebDriverWait wait) {
 
@@ -35,7 +37,6 @@ public class CrawlerExtractor {
             jobId = matcher.group(1);
         }
         htmlContent.append("1. 공고 ID 및 링크 : ").append(jobId).append(currentUrl).append("\n");
-        htmlContent.append("림크 : ").append(currentUrl).append("\n");
         System.out.println("\n--- 1. 공고 ID 및 링크 ---\n" + jobId + ", " + currentUrl);
 
         // 2. 채용 공고 제목
@@ -146,6 +147,7 @@ public class CrawlerExtractor {
         return titleElement.getText();
     }
 
+    // html 태그
     private String extractDetail(String url) throws Exception {
         if (url == null || url.isBlank()) {
             return "";
@@ -156,24 +158,45 @@ public class CrawlerExtractor {
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36")
                 .get();
 
-        Element detailElement = doc.selectFirst("#detail-content");
-        if (detailElement != null) {
-            Set<String> imgUrlSet = new LinkedHashSet<>(); // 이미지 경로 중복 제거를 위함
-            Elements imgElements = detailElement.select("img");
-            for (Element imgElement : imgElements) {
-                String imgUrl = imgElement.absUrl("src");
-                imgUrlSet.add(imgUrl);
-            }
-            StringBuilder imageText = new StringBuilder();
-            imgUrlSet.forEach(urlStr -> imageText.append(urlStr).append("\n"));
-            String detailDescription = Jsoup.clean(detailElement.outerHtml(), Safelist.none());
-            return detailDescription
-                    + "\n<imgUrl>\n"
-                    + imageText
-                    + "</imgUrl>";
-        } else {
-            return "";
+        // 회사 소개
+        Element introduce = doc.selectFirst("div.artTopDesc");
+        // 모집 부문
+        Element detail = doc.selectFirst("td.detailTable");
+        // 이미지
+        Elements images = doc.select("td.detailTable img");
+
+        Set<String> imageSet = new LinkedHashSet<>();
+        for (Element img : images) {
+            imageSet.add(img.attr("src"));
         }
+
+        StringBuilder result = new StringBuilder();
+
+        result.append("\n<회사 소개>\n");
+        if (introduce != null) {
+            result.append(introduce.text());
+        }
+        result.append("\n</회사 소개>\n");
+
+        result.append("\n<모집 부문>\n");
+        if (detail != null) {
+            Safelist tableSafeList = Safelist.none()
+                    .addTags("table", "thead", "tbody", "tfoot")
+                    .addTags("tr", "th", "td")
+                    .addTags("caption", "colgroup", "col");
+            String detailHtml = Jsoup.clean(detail.html(), tableSafeList);
+            result.append(detailHtml);
+        }
+        result.append("\n</모집 부문>\n");
+
+        result.append("\n<채용 공고 이미지 OCR 내용>\n");
+        for (String imgUrl : imageSet) {
+            String imageText = naverOcrService.extractTextFromImageUrl(imgUrl);
+            result.append(imageText).append("\n\n");
+        }
+        result.append("\n</채용 공고 이미지 OCR 내용>\n");
+
+        return result.toString();
     }
 
     private String extractQualification(String rawHtml) {

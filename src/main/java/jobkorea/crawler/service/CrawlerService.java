@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import jobkorea.crawler.config.WebDriverFactory;
-import jobkorea.crawler.dto.Recruitment;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -87,7 +86,7 @@ public class CrawlerService {
             System.err.println("디렉토리 생성 실패: \n" + exception.getMessage());
         }
 
-        for (int i = 0; i < linkCount; i++) {
+        for (int i = 0; i < 10; i++) {
             String newWindowHandle = ""; // 새 창의 핸들을 저장할 변수
 
             try {
@@ -122,9 +121,9 @@ public class CrawlerService {
                 }
                 String resultHTML = crawlerExtractor.extractText(newWindowWait);
 
-                // 7. dto 추출
-                Recruitment dto = aiService.getExplanationText(resultHTML);
-                System.out.println(dto);
+                // 7. 요약본 추출
+                String summation = aiService.getSummationText(resultHTML);
+                System.out.println(summation);
 
             } catch (Exception e) {
                 System.err.println("Index " + i + " 크롤링 중 오류 발생: " + e.getMessage());

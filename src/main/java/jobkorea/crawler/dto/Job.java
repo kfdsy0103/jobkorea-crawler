@@ -7,5 +7,5 @@ import lombok.Data;
 @Data
 public class Job {
     private JobType jobType;
-    private List<String> KPI;
+    private List<String> kpi; // 직무 별 KPI 키워드
 }

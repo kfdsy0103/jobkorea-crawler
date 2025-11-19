@@ -44,3 +44,8 @@ logging:
             client:
               advisor: DEBUG # SimpleLoggerAdvisor
           tool: DEBUG # tool logging
+
+naver:
+  service:
+    url: ${NAVER_SERVICE_URL}
+    secretKey: ${NAVER_SERVICE_SECRET_KEY}
