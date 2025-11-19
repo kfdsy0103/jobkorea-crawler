@@ -146,6 +146,7 @@ public class CrawlerService {
 
             } catch (Exception e) {
                 System.err.println("Index " + i + " 크롤링 중 오류 발생: " + e.getMessage());
+                e.printStackTrace();
             } finally {
                 if (!newWindowHandle.isEmpty() && driver.getWindowHandles().size() > 1) {
                     driver.close();

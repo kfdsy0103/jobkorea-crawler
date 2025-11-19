@@ -1,6 +1,7 @@
 package jobkorea.crawler.service;
 
 import java.util.LinkedHashSet;
+import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,10 @@ public class CrawlerExtractor {
 
     public String extractJobId(String url) {
         Matcher matcher = Pattern.compile(REGEXP_JOB_ID_PATTERN).matcher(url);
-        return matcher.group(1);
+        if (matcher.find()) {
+            return matcher.group(1); // 찾았을 때만 그룹을 반환
+        }
+        throw new NoSuchElementException("JobId를 찾을 수 없습니다.");
     }
 
     public String extractTitle(WebDriverWait wait) {
