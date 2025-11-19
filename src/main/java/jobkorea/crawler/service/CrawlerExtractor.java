@@ -1,6 +1,5 @@
 package jobkorea.crawler.service;
 
-import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,11 +20,10 @@ import org.springframework.stereotype.Component;
 public class CrawlerExtractor {
 
     private final String JOB_KOREA_URL = "https://www.jobkorea.co.kr";
-    private final GoogleOcrService googleOcrService;
-    private final NaverOcrService naverOcrService;
+    private final OcrService ocrService;
     private static final String REGEXP_JOB_ID_PATTERN = "/Recruit/GI_Read/(\\d+)";
 
-    public String extractText(WebDriverWait wait) throws IOException {
+    public String extractText(WebDriverWait wait) throws Exception {
 
         StringBuilder htmlContent = new StringBuilder();
 
@@ -96,7 +94,7 @@ public class CrawlerExtractor {
         return companyNameElement.getText();
     }
 
-    public String extractRecruitmentDetail(WebDriverWait wait) throws IOException {
+    public String extractRecruitmentDetail(WebDriverWait wait) throws Exception {
         WebElement detailIframe = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.cssSelector("#details-section iframe")
         ));
@@ -104,7 +102,7 @@ public class CrawlerExtractor {
         return extractDetail(articleUrl);
     }
 
-    private String extractDetail(String url) throws IOException {
+    private String extractDetail(String url) throws Exception {
         Document doc = Jsoup.connect(JOB_KOREA_URL + url)
                 .userAgent(
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36")
@@ -151,7 +149,7 @@ public class CrawlerExtractor {
         return sb.toString();
     }
 
-    private String extractOcrImageText(Document doc) {
+    private String extractOcrImageText(Document doc) throws Exception {
         Elements images = doc.select("td.detailTable img");
         LinkedHashSet<String> imageSet = new LinkedHashSet<>();
         for (Element img : images) {
@@ -161,7 +159,7 @@ public class CrawlerExtractor {
         StringBuilder sb = new StringBuilder();
         sb.append("\n<채용 공고 이미지 OCR 내용>\n");
         for (String imgUrl : imageSet) {
-            String imageText = naverOcrService.extractTextFromImageUrl(imgUrl);
+            String imageText = ocrService.extractTextFromImageUrl(imgUrl);
             if (!imageText.isBlank()) {
                 sb.append(imageText).append("\n\n");
             }

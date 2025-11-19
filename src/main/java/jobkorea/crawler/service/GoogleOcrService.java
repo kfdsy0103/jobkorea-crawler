@@ -11,11 +11,11 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.stereotype.Service;
 
-@Service
-public class GoogleOcrService {
+// @Service
+public class GoogleOcrService implements OcrService {
 
+    @Override
     public String extractTextFromImageUrl(String imageUrl) throws Exception {
         URL url = new URL(imageUrl);
         ByteString imgBytes;
