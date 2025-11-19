@@ -40,28 +40,12 @@ public class CrawlerExtractor {
         System.out.println("\n--- 1. 공고 ID 및 링크 ---\n" + jobId + ", " + currentUrl);
 
         // 2. 채용 공고 제목
-        String title = "";
-        try {
-            WebElement companyNameElement = wait.until(ExpectedConditions.presenceOfElementLocated(
-                    By.cssSelector("h1[data-sentry-element='Typography']")
-            ));
-            title = companyNameElement.getText();
-        } catch (Exception e) {
-            System.err.println("'제목'을 찾을 수 없습니다: " + e.getMessage());
-        }
+        String title = extractTitle(wait);
         htmlContent.append("2. 채용 공고 제목 : ").append(title).append("\n");
         System.out.println("--- 2. 채용 공고 제목 ---\n" + title);
 
         // 3. 기업명
-        String companyName = "";
-        try {
-            WebElement companyNameElement = wait.until(ExpectedConditions.presenceOfElementLocated(
-                    By.cssSelector("h2[data-sentry-element='Typography']")
-            ));
-            companyName = companyNameElement.getText();
-        } catch (Exception e) {
-            System.err.println("'기업명'을 찾을 수 없습니다: " + e.getMessage());
-        }
+        String companyName = extractCompanyName(wait);
         htmlContent.append("3. 기업명 : ").append(companyName).append("\n");
         System.out.println("--- 3. 기업명 ---\n" + companyName);
 
@@ -147,7 +131,13 @@ public class CrawlerExtractor {
         return titleElement.getText();
     }
 
-    // html 태그
+    public String extractCompanyName(WebDriverWait wait) {
+        WebElement companyNameElement = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("h2[data-sentry-element='Typography']")
+        ));
+        return companyNameElement.getText();
+    }
+
     private String extractDetail(String url) throws Exception {
         if (url == null || url.isBlank()) {
             return "";
