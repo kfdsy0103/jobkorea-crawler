@@ -2,7 +2,6 @@ package jobkorea.crawler.service;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -92,7 +91,6 @@ public class CrawlerExtractor {
         return companyNameElement.getText();
     }
 
-    // 예외 확인하고, 실패 시 skip
     public String extractRecruitmentDetail(WebDriverWait wait) throws IOException {
         WebElement detailIframe = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.cssSelector("#details-section iframe")
@@ -108,43 +106,64 @@ public class CrawlerExtractor {
 
                 .get();
 
-        Element introduce = doc.selectFirst("div.artTopDesc");
-        Element recruitmentTable = doc.selectFirst("td.detailTable");
-        Elements images = doc.select("td.detailTable img");
-
-        // 이미지 중복 제거
-        Set<String> imageSet = new LinkedHashSet<>();
-        for (Element img : images) {
-            imageSet.add(img.attr("src"));
-        }
-
         StringBuilder result = new StringBuilder();
+        result.append(extractCompanyIntroduction(doc));
+        result.append(extractRecruitmentTable(doc));
+        result.append(extractOcrImageText(doc));
 
-        result.append("\n<회사 소개>\n");
+        return result.toString();
+    }
+
+    private String extractCompanyIntroduction(Document doc) {
+        Element introduce = doc.selectFirst("div.artTopDesc");
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("\n<회사 소개>\n");
         if (introduce != null) {
-            result.append(introduce.text());
+            sb.append(introduce.text());
         }
-        result.append("\n</회사 소개>\n");
+        sb.append("\n</회사 소개>\n");
 
-        result.append("\n<모집 부문>\n");
+        return sb.toString();
+    }
+
+    private String extractRecruitmentTable(Document doc) {
+        Element recruitmentTable = doc.selectFirst("td.detailTable");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n<모집 부문>\n");
         if (recruitmentTable != null) {
             Safelist tableSafeList = Safelist.none()
                     .addTags("table", "thead", "tbody", "tfoot")
                     .addTags("tr", "th", "td")
-                    .addTags("caption", "colgroup", "col");
+                    .addTags("caption", "colgroup", "col")
+                    .addAttributes("td", "rowspan", "colspan");
             String detailHtml = Jsoup.clean(recruitmentTable.html(), tableSafeList);
-            result.append(detailHtml);
+            sb.append(detailHtml);
         }
-        result.append("\n</모집 부문>\n");
+        sb.append("\n</모집 부문>\n");
 
-        result.append("\n<채용 공고 이미지 OCR 내용>\n");
+        return sb.toString();
+    }
+
+    private String extractOcrImageText(Document doc) {
+        Elements images = doc.select("td.detailTable img");
+        LinkedHashSet<String> imageSet = new LinkedHashSet<>();
+        for (Element img : images) {
+            imageSet.add(img.attr("src"));
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n<채용 공고 이미지 OCR 내용>\n");
         for (String imgUrl : imageSet) {
             String imageText = naverOcrService.extractTextFromImageUrl(imgUrl);
-            result.append(imageText).append("\n\n");
+            if (!imageText.isBlank()) {
+                sb.append(imageText).append("\n\n");
+            }
         }
-        result.append("\n</채용 공고 이미지 OCR 내용>\n");
+        sb.append("\n</채용 공고 이미지 OCR 내용>\n");
 
-        return result.toString();
+        return sb.toString();
     }
 
     public String extractQualification(WebDriverWait wait) {
