@@ -23,21 +23,17 @@ public class CrawlerExtractor {
     private final String JOB_KOREA_URL = "https://www.jobkorea.co.kr";
     private final GoogleOcrService googleOcrService;
     private final NaverOcrService naverOcrService;
+    private static final String REGEXP_JOB_ID_PATTERN = "/Recruit/GI_Read/(\\d+)";
 
     public String extractText(WebDriverWait wait) throws IOException {
 
         StringBuilder htmlContent = new StringBuilder();
 
-        // 1. 공고 식별 번호 및 링크
-        String jobId = "";
-        String currentUrl = wait.until(driver -> driver.getCurrentUrl());
-        Pattern pattern = Pattern.compile("/Recruit/GI_Read/(\\d+)");
-        Matcher matcher = pattern.matcher(currentUrl);
-        if (matcher.find()) {
-            jobId = matcher.group(1);
-        }
-        htmlContent.append("\n--- 1. 공고 ID 및 링크 ---\n").append(jobId).append(", ").append(currentUrl);
-        System.out.println("\n--- 1. 공고 ID 및 링크 ---\n" + jobId + ", " + currentUrl);
+        // 1. 공고 URL 및 공고 ID
+        String currentUrl = extractCurrentUrl(wait);
+        String jobId = extractJobId(currentUrl);
+        htmlContent.append("\n--- 1. 공고 URL 및 공고 ID ---\n").append(jobId).append(", ").append(currentUrl);
+        System.out.println("\n--- 1. 공고 URL 및 공고 ID ---\n" + jobId + ", " + currentUrl);
 
         // 2. 채용 공고 제목
         String title = extractTitle(wait);
@@ -75,6 +71,15 @@ public class CrawlerExtractor {
         System.out.println("\n--- 8. 모집 요강 ---\n" + recruitmentOutline);
 
         return htmlContent.toString();
+    }
+
+    public String extractCurrentUrl(WebDriverWait wait) {
+        return wait.until(driver -> driver.getCurrentUrl());
+    }
+
+    public String extractJobId(String url) {
+        Matcher matcher = Pattern.compile(REGEXP_JOB_ID_PATTERN).matcher(url);
+        return matcher.group(1);
     }
 
     public String extractTitle(WebDriverWait wait) {
