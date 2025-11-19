@@ -23,54 +23,6 @@ public class CrawlerExtractor {
     private final OcrService ocrService;
     private static final String REGEXP_JOB_ID_PATTERN = "/Recruit/GI_Read/(\\d+)";
 
-    public String extractText(WebDriverWait wait) throws Exception {
-
-        StringBuilder htmlContent = new StringBuilder();
-
-        // 1. 공고 URL 및 공고 ID
-        String currentUrl = extractCurrentUrl(wait);
-        String jobId = extractJobId(currentUrl);
-        htmlContent.append("\n--- 1. 공고 URL 및 공고 ID ---\n").append(jobId).append(", ").append(currentUrl);
-        System.out.println("\n--- 1. 공고 URL 및 공고 ID ---\n" + jobId + ", " + currentUrl);
-
-        // 2. 채용 공고 제목
-        String title = extractTitle(wait);
-        htmlContent.append("\n--- 2. 채용 공고 제목 ---\n").append(title);
-        System.out.println("\n--- 2. 채용 공고 제목 ---\n" + title);
-
-        // 3. 기업명
-        String companyName = extractCompanyName(wait);
-        htmlContent.append("\n--- 3. 기업명 ---\n").append(companyName);
-        System.out.println("\n--- 3. 기업명 ---\n" + companyName);
-
-        // 4. 상세 모집 요강
-        String recruitmentDetail = extractRecruitmentDetail(wait);
-        htmlContent.append("\n--- 4. 상세 모집 요강 ---\n").append(recruitmentDetail);
-        System.out.println("\n--- 4. 상세 모집 요강 ---\n" + recruitmentDetail);
-
-        // 5. 지원 자격
-        String qualification = extractQualification(wait);
-        htmlContent.append("\n--- 5. 지원 자격 ---\n").append(qualification);
-        System.out.println("\n--- 5. 지원 자격 ---\n" + qualification);
-
-        // 6. 기업 정보
-        String corpInfo = extractCorpInfo(wait);
-        htmlContent.append("\n--- 6. 기업 정보 ---\n").append(corpInfo);
-        System.out.println("\n--- 6. 기업 정보 ---\n" + corpInfo);
-
-        // 7. 시작일 및 마감일
-        String timeInfo = extractTimeInfo(wait);
-        htmlContent.append("\n--- 7. 시작일 및 마감일 ---\n").append(timeInfo);
-        System.out.println("\n--- 7. 시작일 및 마감일 ---\n" + timeInfo);
-
-        // 8. 모집 요강
-        String recruitmentOutline = extractRecruitmentOutline(wait);
-        htmlContent.append("\n--- 8. 모집 요강 ---\n").append(recruitmentOutline);
-        System.out.println("\n--- 8. 모집 요강 ---\n" + recruitmentOutline);
-
-        return htmlContent.toString();
-    }
-
     public String extractCurrentUrl(WebDriverWait wait) {
         return wait.until(driver -> driver.getCurrentUrl());
     }

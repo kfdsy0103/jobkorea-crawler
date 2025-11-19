@@ -1,11 +1,13 @@
 package jobkorea.crawler.service;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import jobkorea.crawler.config.WebDriverFactory;
+import jobkorea.crawler.dto.RecruitmentPost;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -79,7 +81,7 @@ public class CrawlerService {
     private void crawlPageItems(WebDriver driver, WebDriverWait wait, String originalHandle, int pageNumber,
                                 int linkCount) {
 
-        Path outputDir = Paths.get("scraped_html");
+        Path outputDir = Paths.get("recruitment_summation");
         try {
             Files.createDirectories(outputDir);
         } catch (Exception exception) {
@@ -115,15 +117,32 @@ public class CrawlerService {
 
                 // 6. 새 창의 wait를 전달하여 텍스트 추출
                 WebDriverWait newWindowWait = new WebDriverWait(driver, CLICK_WAIT_TIME);
+
+                // 7. 채용 공고 DTO 생성
                 String title = crawlerExtractor.extractTitle(newWindowWait);
                 if (title.contains("교육") || title.contains("국비") || title.contains("캠프") || title.contains("취업")) {
+                    System.out.println("Index " + i + " 스킵됨 : " + title);
                     continue;
                 }
-                String resultHTML = crawlerExtractor.extractText(newWindowWait);
+                RecruitmentPost post = new RecruitmentPost();
+                post.setTitle(title);
+                String currentUrl = crawlerExtractor.extractCurrentUrl(newWindowWait);
+                post.setUrl(currentUrl);
+                post.setJobId(crawlerExtractor.extractJobId(currentUrl));
+                post.setCompanyName(crawlerExtractor.extractCompanyName(newWindowWait));
+                post.setRecruitmentDetail(crawlerExtractor.extractRecruitmentDetail(newWindowWait));
+                post.setQualification(crawlerExtractor.extractQualification(newWindowWait));
+                post.setCorpInfo(crawlerExtractor.extractCorpInfo(newWindowWait));
+                post.setTimeInfo(crawlerExtractor.extractTimeInfo(newWindowWait));
+                post.setRecruitmentOutline(crawlerExtractor.extractRecruitmentOutline(newWindowWait));
 
-                // 7. 요약본 추출
+                // 8. LLM 요약본 생성
+                String resultHTML = post.toFormattedString();
                 String summation = aiService.getSummationText(resultHTML);
                 System.out.println(summation);
+
+                // 9. 요약본 text 파일로 저장
+                saveRecruitmentPost(outputDir, post, summation);
 
             } catch (Exception e) {
                 System.err.println("Index " + i + " 크롤링 중 오류 발생: " + e.getMessage());
@@ -133,6 +152,17 @@ public class CrawlerService {
                 }
                 driver.switchTo().window(originalHandle);
             }
+        }
+    }
+
+    private void saveRecruitmentPost(Path outputDir, RecruitmentPost post, String summation) {
+        try {
+            String fileName = post.getJobId() + "_" + post.getCompanyName() + "_" + post.getTitle() + ".text";
+            Path filePath = outputDir.resolve(fileName);
+            Files.writeString(filePath, summation, StandardCharsets.UTF_8);
+            System.out.println("파일 저장 완료: " + fileName);
+        } catch (Exception e) {
+            System.err.println("파일 저장 중 오류 발생 (" + post.getJobId() + "): " + e.getMessage());
         }
     }
 }
