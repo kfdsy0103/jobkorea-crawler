@@ -1,5 +1,6 @@
 package jobkorea.crawler.service;
 
+import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -24,7 +25,7 @@ public class CrawlerExtractor {
     private final GoogleOcrService googleOcrService;
     private final NaverOcrService naverOcrService;
 
-    public String extractText(WebDriverWait wait) {
+    public String extractText(WebDriverWait wait) throws IOException {
 
         StringBuilder htmlContent = new StringBuilder();
 
@@ -36,90 +37,43 @@ public class CrawlerExtractor {
         if (matcher.find()) {
             jobId = matcher.group(1);
         }
-        htmlContent.append("1. 공고 ID 및 링크 : ").append(jobId).append(currentUrl).append("\n");
+        htmlContent.append("\n--- 1. 공고 ID 및 링크 ---\n").append(jobId).append(", ").append(currentUrl);
         System.out.println("\n--- 1. 공고 ID 및 링크 ---\n" + jobId + ", " + currentUrl);
 
         // 2. 채용 공고 제목
         String title = extractTitle(wait);
-        htmlContent.append("2. 채용 공고 제목 : ").append(title).append("\n");
-        System.out.println("--- 2. 채용 공고 제목 ---\n" + title);
+        htmlContent.append("\n--- 2. 채용 공고 제목 ---\n").append(title);
+        System.out.println("\n--- 2. 채용 공고 제목 ---\n" + title);
 
         // 3. 기업명
         String companyName = extractCompanyName(wait);
-        htmlContent.append("3. 기업명 : ").append(companyName).append("\n");
-        System.out.println("--- 3. 기업명 ---\n" + companyName);
+        htmlContent.append("\n--- 3. 기업명 ---\n").append(companyName);
+        System.out.println("\n--- 3. 기업명 ---\n" + companyName);
 
         // 4. 상세 모집 요강
-        String detail = "";
-        try {
-            WebElement detailIframe = wait.until(ExpectedConditions.presenceOfElementLocated(
-                    By.cssSelector("#details-section iframe")
-            ));
-            String articleUrl = detailIframe.getDomAttribute("src");
-            detail = extractDetail(articleUrl);
-        } catch (Exception e) {
-            System.err.println("상세 모집 iframe을 찾을 수 없습니다: " + e.getMessage());
-        }
-        htmlContent.append("4. 상세 모집 요강\n").append(detail).append("\n");
-        System.out.println("--- 4. 상세 모집 요강 ---\n" + detail);
+        String recruitmentDetail = extractRecruitmentDetail(wait);
+        htmlContent.append("\n--- 4. 상세 모집 요강 ---\n").append(recruitmentDetail);
+        System.out.println("\n--- 4. 상세 모집 요강 ---\n" + recruitmentDetail);
 
         // 5. 지원 자격
-        String qualification = "";
-        try {
-            WebElement qualificationSection = wait.until(ExpectedConditions.presenceOfElementLocated(
-                    By.cssSelector("div[data-sentry-component='Qualification']")
-            ));
-            String rawHtml = qualificationSection.getAttribute("innerHTML");
-            qualification = extractQualification(rawHtml);
-        } catch (Exception e) {
-            System.err.println("'Qualification' 섹션을 찾을 수 없습니다");
-        }
-        htmlContent.append("5. 지원 자격\n").append(qualification).append("\n");
-        System.out.println("--- 5. 지원 자격 ---\n" + qualification);
+        String qualification = extractQualification(wait);
+        htmlContent.append("\n--- 5. 지원 자격 ---\n").append(qualification);
+        System.out.println("\n--- 5. 지원 자격 ---\n" + qualification);
 
         // 6. 기업 정보
-        String corpInfo = "";
-        try {
-            WebElement corpInfoSection = wait.until(ExpectedConditions.presenceOfElementLocated(
-                    By.cssSelector("div[data-sentry-component='CorpInformation']")
-            ));
-            String rawHtml = corpInfoSection.getAttribute("innerHTML");
-            corpInfo = extractCorpInfo(rawHtml);
-        } catch (Exception e) {
-            System.err.println("'CorpInformation' 섹션을 찾을 수 없습니다");
-        }
-        htmlContent.append("6. 기업 정보\n").append(corpInfo).append("\n");
-        System.out.println("--- 6. 기업 정보 ---\n" + corpInfo);
+        String corpInfo = extractCorpInfo(wait);
+        htmlContent.append("\n--- 6. 기업 정보 ---\n").append(corpInfo);
+        System.out.println("\n--- 6. 기업 정보 ---\n" + corpInfo);
 
         // 7. 시작일 및 마감일
-        String timeInfo = "";
-        try {
-            WebElement table = wait.until(
-                    ExpectedConditions.presenceOfElementLocated(
-                            By.cssSelector("div[data-sentry-component='SimpleTable']")
-                    )
-            );
-            timeInfo = table.getText();
-        } catch (Exception e) {
-            System.err.println("'시작일 및 마감일' 섹션을 찾을 수 없습니다.");
-        }
-        htmlContent.append("7. 시작일 및 마감일\n").append(timeInfo).append("\n");
-        System.out.println("--- 7. 시작일 및 마감일 ---\n" + timeInfo);
+        String timeInfo = extractTimeInfo(wait);
+        htmlContent.append("\n--- 7. 시작일 및 마감일 ---\n").append(timeInfo);
+        System.out.println("\n--- 7. 시작일 및 마감일 ---\n" + timeInfo);
 
         // 8. 모집 요강
-        String dti = "";
-        try {
-            WebElement flexDiv = wait.until(ExpectedConditions.presenceOfElementLocated(
-                    By.cssSelector(
-                            "div[data-sentry-element='Flex'][data-sentry-source-file='index.tsx'].Flex_display_flex__i0l0hl2.Flex_gap_space28__i0l0hl2a.Flex_direction_column__i0l0hl4"
-                    )
-            ));
-            dti = flexDiv.getText();
-        } catch (Exception e) {
-            System.err.println("'모집 요강' 섹션을 찾을 수 없습니다.");
-        }
-        htmlContent.append("8. 모집 요강\n").append(dti).append("\n");
-        System.out.println("--- 8. 모집 요강 ---\n" + dti);
+        String recruitmentOutline = extractRecruitmentOutline(wait);
+        htmlContent.append("\n--- 8. 모집 요강 ---\n").append(recruitmentOutline);
+        System.out.println("\n--- 8. 모집 요강 ---\n" + recruitmentOutline);
 
         return htmlContent.toString();
     }
@@ -138,23 +92,27 @@ public class CrawlerExtractor {
         return companyNameElement.getText();
     }
 
-    private String extractDetail(String url) throws Exception {
-        if (url == null || url.isBlank()) {
-            return "";
-        }
+    // 예외 확인하고, 실패 시 skip
+    public String extractRecruitmentDetail(WebDriverWait wait) throws IOException {
+        WebElement detailIframe = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("#details-section iframe")
+        ));
+        String articleUrl = detailIframe.getDomAttribute("src");
+        return extractDetail(articleUrl);
+    }
 
+    private String extractDetail(String url) throws IOException {
         Document doc = Jsoup.connect(JOB_KOREA_URL + url)
                 .userAgent(
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36")
+
                 .get();
 
-        // 회사 소개
         Element introduce = doc.selectFirst("div.artTopDesc");
-        // 모집 부문
-        Element detail = doc.selectFirst("td.detailTable");
-        // 이미지
+        Element recruitmentTable = doc.selectFirst("td.detailTable");
         Elements images = doc.select("td.detailTable img");
 
+        // 이미지 중복 제거
         Set<String> imageSet = new LinkedHashSet<>();
         for (Element img : images) {
             imageSet.add(img.attr("src"));
@@ -169,12 +127,12 @@ public class CrawlerExtractor {
         result.append("\n</회사 소개>\n");
 
         result.append("\n<모집 부문>\n");
-        if (detail != null) {
+        if (recruitmentTable != null) {
             Safelist tableSafeList = Safelist.none()
                     .addTags("table", "thead", "tbody", "tfoot")
                     .addTags("tr", "th", "td")
                     .addTags("caption", "colgroup", "col");
-            String detailHtml = Jsoup.clean(detail.html(), tableSafeList);
+            String detailHtml = Jsoup.clean(recruitmentTable.html(), tableSafeList);
             result.append(detailHtml);
         }
         result.append("\n</모집 부문>\n");
@@ -189,59 +147,66 @@ public class CrawlerExtractor {
         return result.toString();
     }
 
-    private String extractQualification(String rawHtml) {
-        if (rawHtml == null || rawHtml.isBlank()) {
-            return "";
-        }
-        Document doc = Jsoup.parseBodyFragment(rawHtml);
+    public String extractQualification(WebDriverWait wait) {
+        WebElement qualificationSection = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("div[data-sentry-component='Qualification']")
+        ));
+        String rawHtml = qualificationSection.getAttribute("innerHTML");
+        return extractQualification(rawHtml);
+    }
 
+    private String extractQualification(String rawHtml) {
+        Document doc = Jsoup.parseBodyFragment(rawHtml);
         Elements items = doc.select("div[data-sentry-component='QualificationItem']");
-        if (items.isEmpty()) {
-            return "";
-        }
 
         StringBuilder cleanHtml = new StringBuilder();
         for (Element item : items) {
-            // 경력, 학력, 스킬, 우대조건
             Element keyElement = item.selectFirst("span[style*='min-width:80px']");
-            String key = (keyElement != null) ? keyElement.text() : "";
-            String value = item.text().replaceFirst(key, "").trim();
-
-            cleanHtml.append(key)
-                    .append(": ")
-                    .append(value)
-                    .append("\n");
+            String key = keyElement.text();
+            String value = item.text().replace(key, "").trim();
+            cleanHtml.append(key).append(": ").append(value).append("\n");
         }
         return cleanHtml.toString();
     }
 
-    private String extractCorpInfo(String rawHtml) {
-        if (rawHtml == null || rawHtml.isBlank()) {
-            return "";
-        }
-        Document doc = Jsoup.parseBodyFragment(rawHtml);
+    public String extractCorpInfo(WebDriverWait wait) {
+        WebElement corpInfoSection = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("div[data-sentry-component='CorpInformation']")
+        ));
+        String rawHtml = corpInfoSection.getAttribute("innerHTML");
+        return extractCorpInfo(rawHtml);
+    }
 
+    private String extractCorpInfo(String rawHtml) {
+        Document doc = Jsoup.parseBodyFragment(rawHtml);
         Elements items = doc.select("div[data-sentry-component='CorpInformationBox']");
-        if (items.isEmpty()) {
-            return "";
-        }
 
         StringBuilder cleanHtml = new StringBuilder();
         for (Element item : items) {
-            // 사원수, 기업 구분, 산업(업종), 지도보기
             Element keyElement = item.selectFirst("span[class*='Typography_variant_size13']");
             Element valueElement = item.selectFirst("div[class*='Typography_variant_size14']");
-
-            String key = (keyElement != null) ? keyElement.text() : "";
-            String value = (valueElement != null) ? valueElement.text() : "";
-
+            String key = keyElement.text();
+            String value = valueElement.text();
             if (!key.isEmpty() && !value.isEmpty()) {
-                cleanHtml.append(key)
-                        .append(": ")
-                        .append(value)
-                        .append("\n");
+                cleanHtml.append(key).append(": ").append(value).append("\n");
             }
         }
         return cleanHtml.toString();
+    }
+
+    public String extractTimeInfo(WebDriverWait wait) {
+        WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("div[data-sentry-component='SimpleTable']")
+        ));
+        return element.getText();
+    }
+
+    public String extractRecruitmentOutline(WebDriverWait wait) {
+        WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector(
+                        "div[data-sentry-element='Flex'][data-sentry-source-file='index.tsx'].Flex_display_flex__i0l0hl2.Flex_gap_space28__i0l0hl2a.Flex_direction_column__i0l0hl4"
+                )
+        ));
+        return element.getText();
     }
 }
