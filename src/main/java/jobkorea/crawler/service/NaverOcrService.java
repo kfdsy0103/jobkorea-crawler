@@ -104,7 +104,7 @@ public class NaverOcrService implements OcrService {
                 String chunkResult = sendOcrRequest(null, base64Data, format);
                 combinedText.append(chunkResult).append("\n");
             }
-
+            
             return combinedText.toString().trim();
         }
     }
