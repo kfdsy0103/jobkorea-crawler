@@ -88,7 +88,7 @@ public class CrawlerService {
             System.err.println("디렉토리 생성 실패: \n" + exception.getMessage());
         }
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < linkCount; i++) {
             String newWindowHandle = ""; // 새 창의 핸들을 저장할 변수
 
             try {
@@ -158,12 +158,19 @@ public class CrawlerService {
 
     private void saveRecruitmentPost(Path outputDir, RecruitmentPost post, String summation) {
         try {
-            String fileName = post.getJobId() + "_" + post.getCompanyName() + "_" + post.getTitle() + ".text";
+            String companyName = sanitizeFileName(post.getCompanyName());
+            String title = sanitizeFileName(post.getTitle());
+            String fileName = post.getJobId() + "_" + companyName + "_" + title + ".text";
+
             Path filePath = outputDir.resolve(fileName);
             Files.writeString(filePath, summation, StandardCharsets.UTF_8);
             System.out.println("파일 저장 완료: " + fileName);
         } catch (Exception e) {
             System.err.println("파일 저장 중 오류 발생 (" + post.getJobId() + "): " + e.getMessage());
         }
+    }
+
+    private String sanitizeFileName(String input) {
+        return input.replaceAll("[\\\\/:*?\"<>|\\r\\n\\t.]", "_").trim();
     }
 }
