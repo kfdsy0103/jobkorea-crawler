@@ -122,7 +122,7 @@ public class CrawlerExtractor {
         }
         sb.append("\n</채용 공고 이미지 OCR 내용>\n");
 
-        System.out.println("채용 공고 내용\n" + sb.toString());
+        System.out.println(sb.toString());
 
         return sb.toString();
     }
