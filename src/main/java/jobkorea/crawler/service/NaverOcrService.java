@@ -63,6 +63,10 @@ public class NaverOcrService implements OcrService {
     public String extractTextFromImageUrl(String imageUrl) throws Exception {
 
         String format = "png";
+        String lowerUrl = imageUrl.toLowerCase();
+        if (lowerUrl.endsWith(".jpg")) {
+            format = "jpg";
+        }
 
         if (imageUrl.startsWith("//")) {
             imageUrl = "https:" + imageUrl;
@@ -75,13 +79,13 @@ public class NaverOcrService implements OcrService {
         int totalHeight = originalImage.getHeight();
         int width = originalImage.getWidth();
 
-        System.out.println("y : " + totalHeight + ", x : " + width);
-
         // 3. 높이 체크 및 분기 처리
         if (totalHeight <= MAX_HEIGHT) {
             return sendOcrRequest(imageUrl, null, format);
         }
 
+        // 이미지 분할 시 포맷을 png로 고정
+        format = "png";
         StringBuilder combinedText = new StringBuilder();
         for (int y = 0; y < totalHeight; y += MAX_HEIGHT) {
             // 자를 높이 계산 (마지막 조각은 남은 만큼만)
