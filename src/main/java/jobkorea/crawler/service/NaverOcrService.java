@@ -76,12 +76,17 @@ public class NaverOcrService implements OcrService {
         // 이미지 확장자 정의
         String format = extension;
 
-        // 1. 이미지 다운로드 및 크기 확인
+        // 이미지 다운로드 및 크기 확인
         URL url = new URL(imageUrl);
         BufferedImage originalImage = ImageIO.read(url);
 
         int totalHeight = originalImage.getHeight();
         int width = originalImage.getWidth();
+
+        // API 호출 비용 절감을 위한 분기 처리 (너무 작은 이미지)
+        if (totalHeight <= 50) {
+            return "";
+        }
 
         // 높이 체크 및 분기 처리
         if (totalHeight <= MAX_HEIGHT) {
