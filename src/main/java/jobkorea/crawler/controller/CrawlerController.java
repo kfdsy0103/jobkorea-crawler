@@ -20,15 +20,4 @@ public class CrawlerController {
     public void requestCrawling() {
         crawlerService.crawl(List.of(1));
     }
-
-    @GetMapping("/long-image")
-    public String longImage() {
-        try {
-            return naverOcrService.extractTextFromImageUrl(
-                    "https://file2.jobkorea.co.kr/Net/Mng/DownImage/CorpEditor?file_No=1503549");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "fail";
-    }
 }
