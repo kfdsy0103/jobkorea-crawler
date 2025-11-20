@@ -25,6 +25,7 @@ public class NaverOcrService implements OcrService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
     private static final int MAX_HEIGHT = 1960;
+    private static final List<String> SUPPORTED_FORMATS = List.of("jpg", "jpeg", "png", "pdf", "tif", "tiff");
 
     public NaverOcrService(
             @Value("${naver.service.url}") String apiUrl,
@@ -62,24 +63,27 @@ public class NaverOcrService implements OcrService {
     @Override
     public String extractTextFromImageUrl(String imageUrl) throws Exception {
 
-        String format = "png";
-        String lowerUrl = imageUrl.toLowerCase();
-        if (lowerUrl.endsWith(".jpg")) {
-            format = "jpg";
-        }
-
         if (imageUrl.startsWith("//")) {
             imageUrl = "https:" + imageUrl;
         }
 
-        // 2. 이미지 다운로드 및 크기 확인
+        String extension = getExtensionFromUrl(imageUrl);
+        if (!SUPPORTED_FORMATS.contains(extension)) {
+            System.err.println("OCR 미지원 이미지입니다: " + imageUrl);
+            return "";
+        }
+
+        // 이미지 확장자 정의
+        String format = extension;
+
+        // 1. 이미지 다운로드 및 크기 확인
         URL url = new URL(imageUrl);
         BufferedImage originalImage = ImageIO.read(url);
 
         int totalHeight = originalImage.getHeight();
         int width = originalImage.getWidth();
 
-        // 3. 높이 체크 및 분기 처리
+        // 높이 체크 및 분기 처리
         if (totalHeight <= MAX_HEIGHT) {
             return sendOcrRequest(imageUrl, null, format);
         }
@@ -171,5 +175,13 @@ public class NaverOcrService implements OcrService {
         } catch (Exception e) {
             throw new RuntimeException("Image conversion failed", e);
         }
+    }
+
+    private String getExtensionFromUrl(String imageUrl) {
+        int lastDotIndex = imageUrl.lastIndexOf('.');
+        if (lastDotIndex != -1) {
+            return imageUrl.substring(lastDotIndex + 1).toLowerCase();
+        }
+        return "";
     }
 }
