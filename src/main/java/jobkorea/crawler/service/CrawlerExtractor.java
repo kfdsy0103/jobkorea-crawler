@@ -110,6 +110,9 @@ public class CrawlerExtractor {
         Elements images = doc.select("td.detailTable img");
         LinkedHashSet<String> imageSet = new LinkedHashSet<>();
         for (Element img : images) {
+            if (img.closest("p.visual") != null) {
+                continue;
+            }
             imageSet.add(img.attr("src"));
         }
 

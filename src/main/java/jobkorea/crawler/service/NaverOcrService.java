@@ -25,7 +25,6 @@ public class NaverOcrService implements OcrService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
     private static final int MAX_HEIGHT = 1960;
-    private static final List<String> SUPPORTED_FORMATS = List.of("jpg", "jpeg", "png", "pdf", "tif", "tiff");
 
     public NaverOcrService(
             @Value("${naver.service.url}") String apiUrl,
@@ -67,15 +66,6 @@ public class NaverOcrService implements OcrService {
             imageUrl = "https:" + imageUrl;
         }
 
-        String extension = getExtensionFromUrl(imageUrl);
-        if (!SUPPORTED_FORMATS.contains(extension)) {
-            System.err.println("OCR 미지원 이미지입니다: " + imageUrl);
-            return "";
-        }
-
-        // 이미지 확장자 정의
-        String format = extension;
-
         // 이미지 다운로드 및 크기 확인
         URL url = new URL(imageUrl);
         BufferedImage originalImage = ImageIO.read(url);
@@ -84,7 +74,17 @@ public class NaverOcrService implements OcrService {
         int width = originalImage.getWidth();
 
         // API 호출 비용 절감을 위한 분기 처리 (너무 작은 이미지)
-        if (totalHeight <= 50) {
+        if (totalHeight <= 150) {
+            System.out.println("OCR 호출 대상에서 제거됨");
+            return "";
+        }
+
+        // 이미지 포맷 정의
+        String format = "jpg";
+        if (imageUrl.endsWith(".png")) {
+            format = "png";
+        } else if (imageUrl.endsWith(".gif")) {
+            System.out.println("OCR 호출 대상에서 제거됨");
             return "";
         }
 
@@ -93,7 +93,7 @@ public class NaverOcrService implements OcrService {
             return sendOcrRequest(imageUrl, null, format);
         }
 
-        // 이미지 분할 시 포맷을 png로 고정
+        // 이미지 분할 시 포맷을 png로 고정 (jpg는 투명 배경 인식x)
         format = "png";
         StringBuilder combinedText = new StringBuilder();
         for (int y = 0; y < totalHeight; y += MAX_HEIGHT) {
@@ -180,13 +180,5 @@ public class NaverOcrService implements OcrService {
         } catch (Exception e) {
             throw new RuntimeException("Image conversion failed", e);
         }
-    }
-
-    private String getExtensionFromUrl(String imageUrl) {
-        int lastDotIndex = imageUrl.lastIndexOf('.');
-        if (lastDotIndex != -1) {
-            return imageUrl.substring(lastDotIndex + 1).toLowerCase();
-        }
-        return "";
     }
 }
