@@ -37,7 +37,7 @@ public class CrawlerService {
                 System.out.println("=== [" + jobCode.name() + "] 직무 크롤링 시작 === ");
                 driver.get(baseUrl);
                 crawlerFilter.selectFilter(wait, jobCode);
-                crawlByJob(driver, wait, pagesToCrawl);
+                crawlByJob(driver, wait, jobCode, pagesToCrawl);
             }
         } catch (Exception exception) {
             System.err.println("치명적 에러 발생: " + exception.getMessage());
@@ -48,9 +48,17 @@ public class CrawlerService {
         }
     }
 
-    private void crawlByJob(WebDriver driver, WebDriverWait wait, List<Integer> pagesToCrawl) {
+    private void crawlByJob(WebDriver driver, WebDriverWait wait, JobCode jobCode, List<Integer> pagesToCrawl) {
         String originalHandle = driver.getWindowHandle();
         String currentBaseUrl = driver.getCurrentUrl();
+
+        Path outputDir = Paths.get("recruitment_post_" + jobCode.name());
+        try {
+            Files.createDirectories(outputDir);
+        } catch (Exception e) {
+            System.err.println("디렉토리 생성 실패 (" + outputDir + "): " + e.getMessage());
+            return;
+        }
 
         for (Integer pageNumber : pagesToCrawl) {
             try {
@@ -86,57 +94,42 @@ public class CrawlerService {
             String newWindowHandle = ""; // 새 창의 핸들을 저장할 변수
 
             try {
-                // 1. 인덱스에 해당하는 채용 공고
+                // 1. 인덱스에 해당하는 채용 공고 클릭
                 String selector = "tr[data-index='" + i + "'] strong > a";
                 WebElement element = wait.until(
                         ExpectedConditions.elementToBeClickable(By.cssSelector(selector))
                 );
-
-                // 2. 클릭해서 새 창(탭) 열기
                 element.click();
 
-                // 3. 새 창이 열릴 때까지 대기
+                // 2. 채용 공고 창이 열릴 때까지 대기
                 wait.until(ExpectedConditions.numberOfWindowsToBe(2));
 
-                // 4. 새로 열린 창의 핸들 찾기
+                // 3. 새 창의 핸들 찾기
                 for (String handle : driver.getWindowHandles()) {
                     if (!handle.equals(originalHandle)) {
                         newWindowHandle = handle;
                         break;
                     }
                 }
-
-                // 5. 새 창으로 초점 전환
                 driver.switchTo().window(newWindowHandle);
 
-                // 6. 새 창의 wait를 전달하여 텍스트 추출
+                // 4. 새 창의 wait 생성
                 WebDriverWait newWindowWait = new WebDriverWait(driver, CLICK_WAIT_TIME);
 
-                // 7. 채용 공고 DTO 생성
+                // 5. 채용 공고 정보 추출
                 String title = crawlerExtractor.extractTitle(newWindowWait);
-                if (title.contains("교육") || title.contains("국비") || title.contains("캠프") || title.contains("취업")) {
-                    System.out.println("Index " + i + " 스킵됨 : " + title);
-                    continue;
+                if (isSkipTitle(title)) {
+                    System.out.println("Index " + i + " 스킵됨, 제목 : " + title);
+                    return;
                 }
-                RecruitmentPost post = new RecruitmentPost();
-                post.setTitle(title);
-                String currentUrl = crawlerExtractor.extractCurrentUrl(newWindowWait);
-                post.setUrl(currentUrl);
-                post.setJobId(crawlerExtractor.extractJobId(currentUrl));
-                post.setCompanyName(crawlerExtractor.extractCompanyName(newWindowWait));
-                post.setRecruitmentDetail(crawlerExtractor.extractRecruitmentDetail(newWindowWait));
-                post.setQualification(crawlerExtractor.extractQualification(newWindowWait));
-                post.setCorpInfo(crawlerExtractor.extractCorpInfo(newWindowWait));
-                post.setTimeInfo(crawlerExtractor.extractTimeInfo(newWindowWait));
-                post.setRecruitmentOutline(crawlerExtractor.extractRecruitmentOutline(newWindowWait));
 
-                // 8. LLM 요약본 생성
-                String resultHTML = post.toFormattedString();
-                String summation = aiService.getSummationText(resultHTML);
+                // 6. LLM 요약 문서 생성
+                RecruitmentPost recruitmentPost = getRecruitmentPost(newWindowWait);
+                String summation = aiService.getSummationText(recruitmentPost.toFormattedString());
                 System.out.println(summation);
 
-                // 9. 요약본 text 파일로 저장
-                saveRecruitmentPost(outputDir, post, summation);
+                // 7. 요약본 저장
+                saveRecruitmentPost(outputDir, recruitmentPost, summation);
 
             } catch (Exception e) {
                 System.err.println("Index " + i + " 크롤링 중 오류 발생: " + e.getMessage());
@@ -148,6 +141,23 @@ public class CrawlerService {
                 driver.switchTo().window(originalHandle);
             }
         }
+    }
+
+    private RecruitmentPost getRecruitmentPost(WebDriverWait wait) throws Exception {
+        RecruitmentPost post = new RecruitmentPost();
+
+        post.setTitle(crawlerExtractor.extractTitle(wait));
+        String currentUrl = crawlerExtractor.extractCurrentUrl(wait);
+        post.setUrl(currentUrl);
+        post.setJobId(crawlerExtractor.extractJobId(currentUrl));
+        post.setCompanyName(crawlerExtractor.extractCompanyName(wait));
+        post.setRecruitmentDetail(crawlerExtractor.extractRecruitmentDetail(wait));
+        post.setQualification(crawlerExtractor.extractQualification(wait));
+        post.setCorpInfo(crawlerExtractor.extractCorpInfo(wait));
+        post.setTimeInfo(crawlerExtractor.extractTimeInfo(wait));
+        post.setRecruitmentOutline(crawlerExtractor.extractRecruitmentOutline(wait));
+
+        return post;
     }
 
     private void saveRecruitmentPost(Path outputDir, RecruitmentPost post, String summation) {
@@ -162,6 +172,10 @@ public class CrawlerService {
         } catch (Exception e) {
             System.err.println("파일 저장 중 오류 발생 (" + post.getJobId() + "): " + e.getMessage());
         }
+    }
+
+    private boolean isSkipTitle(String title) {
+        return title.contains("교육") || title.contains("국비") || title.contains("캠프") || title.contains("취업");
     }
 
     private String sanitizeFileName(String input) {
