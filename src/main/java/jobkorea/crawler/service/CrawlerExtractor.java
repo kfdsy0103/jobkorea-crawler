@@ -29,12 +29,12 @@ public class CrawlerExtractor {
         return wait.until(driver -> driver.getCurrentUrl());
     }
 
-    public String extractJobId(String url) {
+    public String extractPostId(String url) {
         Matcher matcher = Pattern.compile(REGEXP_JOB_ID_PATTERN).matcher(url);
         if (matcher.find()) {
             return matcher.group(1); // 찾았을 때만 그룹을 반환
         }
-        throw new NoSuchElementException("JobId를 찾을 수 없습니다.");
+        throw new NoSuchElementException("PostId를 찾을 수 없습니다.");
     }
 
     public String extractTitle(WebDriverWait wait) {
@@ -113,7 +113,7 @@ public class CrawlerExtractor {
             if (img.closest("p.visual") != null) {
                 continue;
             }
-            imageSet.add(img.attr("src"));
+            imageSet.add(img.absUrl("src"));
         }
 
         StringBuilder sb = new StringBuilder();
@@ -125,8 +125,6 @@ public class CrawlerExtractor {
             }
         }
         sb.append("\n</채용 공고 이미지 OCR 내용>\n");
-
-        System.out.println(sb.toString());
 
         return sb.toString();
     }
