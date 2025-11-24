@@ -22,22 +22,25 @@ public class CrawlerFilter {
         WebElement jobCheckbox = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(selector)));
         wait.until(ExpectedConditions.elementToBeClickable(jobCheckbox)).click();
 
-        searchAndSort(wait);
+        search(wait);
+        applySort(wait);
+        applyQuantity(wait);
     }
 
-    private void searchAndSort(WebDriverWait wait) throws InterruptedException {
-        // "검색" 버튼 클릭
+    private void search(WebDriverWait wait) throws InterruptedException {
         WebElement searchButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("dev-btn-search")));
         searchButton.click();
         Thread.sleep(5000); // 한 창에 모든 요소가 존재하여 대기
+    }
 
-        // 최신 업데이트로 정렬
+    private void applySort(WebDriverWait wait) throws InterruptedException {
         WebElement optionToClick = wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("#orderTab option[value='3']")
         ));
         optionToClick.click();
+    }
 
-        // 50개씩 보기
+    private void applyQuantity(WebDriverWait wait) throws InterruptedException {
         WebElement elementsPerPage = wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("#pstab option[value='50']")
         ));
