@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class AIService {
 
-    private final ChatClient chatClent;
+    private final ChatClient chatClient;
 
     public AIService(ChatClient.Builder clientBuilder) {
-        this.chatClent = clientBuilder.build();
+        this.chatClient = clientBuilder.build();
     }
 
     public String getSummationText(String text) {
@@ -46,7 +46,7 @@ public class AIService {
                 .text(text)
                 .build();
 
-        String summation = chatClent.prompt()
+        String summation = chatClient.prompt()
                 .messages(systemMessage, userMessage)
                 .call()
                 .content();
@@ -90,7 +90,7 @@ public class AIService {
                 .text(text)
                 .build();
 
-        Recruitment dto = chatClent.prompt()
+        Recruitment dto = chatClient.prompt()
                 .messages(systemMessage, userMessage)
                 .call()
                 .entity(Recruitment.class);

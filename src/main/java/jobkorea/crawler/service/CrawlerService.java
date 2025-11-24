@@ -31,55 +31,49 @@ public class CrawlerService {
 
     public void crawl(List<Integer> pagesToCrawl) {
         WebDriver driver = webDriverFactory.createChromeDriver();
-
-        // '직무별 공고' 창 접속
-        driver.get(baseUrl);
-        // 기존 창 유지
-        String originalHandle = driver.getWindowHandle();
-        // 최대 5초까지 대기하는 Wait 생성
         WebDriverWait wait = new WebDriverWait(driver, CLICK_WAIT_TIME);
-
         try {
-            // 필터 적용
-            crawlerFilter.selectFilter(wait, JobCode.웹개발);
-
-            for (Integer pageNumber : pagesToCrawl) {
-                try {
-                    System.out.println("--- " + pageNumber + "페이지 크롤링 시작 ---");
-
-                    String currentUrl = crawlerExtractor.extractCurrentUrl(wait);
-                    String newUrl = currentUrl.replaceAll("#anchorGICnt_\\d+", "#anchorGICnt_" + pageNumber);
-
-                    driver.get(newUrl);
-
-                    wait.until(ExpectedConditions.presenceOfElementLocated(
-                            By.cssSelector("tr[data-index='0']")
-                    ));
-
-                    // 현재 페이지의 공고 개수 추출
-                    int linkCount = driver.findElements(By.cssSelector("tr[data-index]")).size();
-                    if (linkCount == 0) {
-                        System.out.println(pageNumber + "페이지에 항목이 없습니다.");
-                        continue;
-                    }
-                    System.out.println(pageNumber + "페이지에서 " + linkCount + "개의 항목을 찾았습니다.");
-
-                    // 공고 개수만큼 크롤링
-                    crawlPageItems(driver, wait, originalHandle, pageNumber, linkCount);
-                    System.out.println("크롤링 성공");
-                } catch (Exception exception) {
-                    System.out.println(pageNumber + "페이지 처리 중 오류 발생\n" + exception.getMessage());
-                }
+            for (JobCode jobCode : JobCode.values()) {
+                System.out.println("=== [" + jobCode.name() + "] 직무 크롤링 시작 === ");
+                driver.get(baseUrl);
+                crawlerFilter.selectFilter(wait, jobCode);
+                crawlByJob(driver, wait, pagesToCrawl);
             }
         } catch (Exception exception) {
-            System.out.println("크롤링 중 치명적 에러 발생\n" + exception.getMessage());
+            System.err.println("치명적 에러 발생: " + exception.getMessage());
         } finally {
-            driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
-    private void crawlPageItems(WebDriver driver, WebDriverWait wait, String originalHandle, int pageNumber,
-                                int linkCount) {
+    private void crawlByJob(WebDriver driver, WebDriverWait wait, List<Integer> pagesToCrawl) {
+        String originalHandle = driver.getWindowHandle();
+        String currentBaseUrl = driver.getCurrentUrl();
+
+        for (Integer pageNumber : pagesToCrawl) {
+            try {
+                String newUrl = currentBaseUrl.replaceAll("#anchorGICnt_\\d+", "#anchorGICnt_" + pageNumber);
+                driver.get(newUrl);
+
+                wait.until(ExpectedConditions.presenceOfElementLocated(
+                        By.cssSelector("tr[data-index='0']")
+                ));
+
+                // 공고 개수 확인
+                int linkCount = driver.findElements(By.cssSelector("tr[data-index]")).size();
+                System.out.println(pageNumber + "페이지에서 " + linkCount + "개의 항목 발견");
+
+                // 페이지 당 크롤링
+                crawlPageItems(driver, wait, originalHandle, linkCount);
+            } catch (Exception exception) {
+                System.out.println(pageNumber + "페이지 처리 중 오류: " + exception.getMessage());
+            }
+        }
+    }
+
+    private void crawlPageItems(WebDriver driver, WebDriverWait wait, String originalHandle, int linkCount) {
 
         Path outputDir = Paths.get("recruitment_summation");
         try {
