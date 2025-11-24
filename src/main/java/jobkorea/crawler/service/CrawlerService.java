@@ -40,17 +40,16 @@ public class CrawlerService {
 
         try {
             // 필터 적용
-            crawlerFilter.selectFilter(wait);
+            crawlerFilter.selectWebDeveloperFilter(wait);
 
             for (Integer pageNumber : pagesToCrawl) {
                 try {
                     System.out.println("--- " + pageNumber + "페이지 크롤링 시작 ---");
 
-                    String currentPage = "#anchorGICnt_" + pageNumber;
-                    WebElement pageLink = wait.until(
-                            ExpectedConditions.elementToBeClickable(By.cssSelector(currentPage))
-                    );
-                    pageLink.click();
+                    String currentUrl = crawlerExtractor.extractCurrentUrl(wait);
+                    String newUrl = currentUrl.replaceAll("#anchorGICnt_\\d+", "#anchorGICnt_" + pageNumber);
+
+                    driver.get(newUrl);
 
                     wait.until(ExpectedConditions.presenceOfElementLocated(
                             By.cssSelector("tr[data-index='0']")
