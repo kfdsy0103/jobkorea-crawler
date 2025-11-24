@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.util.List;
 import jobkorea.crawler.config.WebDriverFactory;
 import jobkorea.crawler.dto.RecruitmentPost;
+import jobkorea.crawler.enums.JobCode;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -40,7 +41,7 @@ public class CrawlerService {
 
         try {
             // 필터 적용
-            crawlerFilter.selectWebDeveloperFilter(wait);
+            crawlerFilter.selectFilter(wait, JobCode.웹개발);
 
             for (Integer pageNumber : pagesToCrawl) {
                 try {
