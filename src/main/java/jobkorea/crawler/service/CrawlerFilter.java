@@ -46,6 +46,24 @@ public class CrawlerFilter {
         searchAndSort(wait);
     }
 
+    public void selectDesignerFilter(WebDriverWait wait) throws Exception {
+
+        JobCode jobCode = JobCode.디자인;
+        String step1 = jobCode.getJobCode();
+        String step2 = jobCode.getDetailCode();
+
+        // "디자인" -> "그래픽디자이너"
+        WebElement PMFilter = wait.until(
+                ExpectedConditions.presenceOfElementLocated(By.cssSelector("label[for='duty_step1_" + step1 + "']")));
+        PMFilter.click();
+        String selector = "label[for='duty_step2_" + step2 + "']";
+
+        WebElement jobCheckbox = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(selector)));
+        wait.until(ExpectedConditions.elementToBeClickable(jobCheckbox)).click();
+
+        searchAndSort(wait);
+    }
+
     private void searchAndSort(WebDriverWait wait) throws InterruptedException {
         // "검색" 버튼 클릭
         WebElement searchButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("dev-btn-search")));
