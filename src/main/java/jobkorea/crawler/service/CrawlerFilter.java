@@ -12,12 +12,33 @@ public class CrawlerFilter {
 
     public void selectWebDeveloperFilter(WebDriverWait wait) throws Exception {
 
-        // "AI/개발/데이터" 필터 클릭
-        WebElement devDataFilter = wait.until(
-                ExpectedConditions.presenceOfElementLocated(By.cssSelector("label[for='duty_step1_10031']")));
-        devDataFilter.click();
+        JobCode jobCode = JobCode.웹개발;
+        String step1 = jobCode.getJobCode();
+        String step2 = jobCode.getDetailCode();
 
-        String selector = "label[for='duty_step2_" + JobCode.웹개발.getJobCode() + "']";
+        // "AI/개발/데이터" -> "웹개발"
+        WebElement devDataFilter = wait.until(
+                ExpectedConditions.presenceOfElementLocated(By.cssSelector("label[for='duty_step1_" + step1 + "']")));
+        devDataFilter.click();
+        String selector = "label[for='duty_step2_" + step2 + "']";
+
+        WebElement jobCheckbox = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(selector)));
+        wait.until(ExpectedConditions.elementToBeClickable(jobCheckbox)).click();
+
+        searchAndSort(wait);
+    }
+
+    public void selectPMFilter(WebDriverWait wait) throws Exception {
+
+        JobCode jobCode = JobCode.PM;
+        String step1 = jobCode.getJobCode();
+        String step2 = jobCode.getDetailCode();
+
+        // "기획·전략" -> "경영·비즈니스"
+        WebElement PMFilter = wait.until(
+                ExpectedConditions.presenceOfElementLocated(By.cssSelector("label[for='duty_step1_" + step1 + "']")));
+        PMFilter.click();
+        String selector = "label[for='duty_step2_" + step2 + "']";
 
         WebElement jobCheckbox = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(selector)));
         wait.until(ExpectedConditions.elementToBeClickable(jobCheckbox)).click();
