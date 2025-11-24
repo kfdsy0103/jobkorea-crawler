@@ -34,7 +34,7 @@ public class CrawlerService {
         WebDriverWait wait = new WebDriverWait(driver, CLICK_WAIT_TIME);
         try {
             for (JobCode jobCode : JobCode.values()) {
-                System.out.println("=== [" + jobCode.name() + "] 직무 크롤링 시작 === ");
+                System.out.println("\n=== [" + jobCode.name() + "] 직무 크롤링 시작 === ");
                 driver.get(baseUrl);
                 crawlerFilter.selectFilter(wait, jobCode);
                 crawlByJob(driver, wait, jobCode, pagesToCrawl);
@@ -52,7 +52,7 @@ public class CrawlerService {
         String originalHandle = driver.getWindowHandle();
         String currentBaseUrl = driver.getCurrentUrl();
 
-        Path outputDir = Paths.get("recruitment_post_" + jobCode.name());
+        Path outputDir = Paths.get("recruitment_summation_" + jobCode.name().toLowerCase());
         try {
             Files.createDirectories(outputDir);
         } catch (Exception e) {
@@ -74,21 +74,15 @@ public class CrawlerService {
                 System.out.println(pageNumber + "페이지에서 " + linkCount + "개의 항목 발견");
 
                 // 페이지 당 크롤링
-                crawlPageItems(driver, wait, originalHandle, linkCount);
+                crawlPageItems(driver, wait, outputDir, originalHandle, linkCount);
             } catch (Exception exception) {
                 System.out.println(pageNumber + "페이지 처리 중 오류: " + exception.getMessage());
             }
         }
     }
 
-    private void crawlPageItems(WebDriver driver, WebDriverWait wait, String originalHandle, int linkCount) {
-
-        Path outputDir = Paths.get("recruitment_summation");
-        try {
-            Files.createDirectories(outputDir);
-        } catch (Exception exception) {
-            System.err.println("디렉토리 생성 실패: \n" + exception.getMessage());
-        }
+    private void crawlPageItems(WebDriver driver, WebDriverWait wait, Path outputDir, String originalHandle,
+                                int linkCount) {
 
         for (int i = 0; i < linkCount; i++) {
             String newWindowHandle = ""; // 새 창의 핸들을 저장할 변수
@@ -120,7 +114,7 @@ public class CrawlerService {
                 String title = crawlerExtractor.extractTitle(newWindowWait);
                 if (isSkipTitle(title)) {
                     System.out.println("Index " + i + " 스킵됨, 제목 : " + title);
-                    return;
+                    continue;
                 }
 
                 // 6. LLM 요약 문서 생성
@@ -149,7 +143,7 @@ public class CrawlerService {
         post.setTitle(crawlerExtractor.extractTitle(wait));
         String currentUrl = crawlerExtractor.extractCurrentUrl(wait);
         post.setUrl(currentUrl);
-        post.setJobId(crawlerExtractor.extractJobId(currentUrl));
+        post.setPostId(crawlerExtractor.extractPostId(currentUrl));
         post.setCompanyName(crawlerExtractor.extractCompanyName(wait));
         post.setRecruitmentDetail(crawlerExtractor.extractRecruitmentDetail(wait));
         post.setQualification(crawlerExtractor.extractQualification(wait));
@@ -164,13 +158,13 @@ public class CrawlerService {
         try {
             String companyName = sanitizeFileName(post.getCompanyName());
             String title = sanitizeFileName(post.getTitle());
-            String fileName = post.getJobId() + "_" + companyName + "_" + title + ".text";
+            String fileName = post.getPostId() + "_" + companyName + "_" + title + ".text";
 
             Path filePath = outputDir.resolve(fileName);
             Files.writeString(filePath, summation, StandardCharsets.UTF_8);
             System.out.println("파일 저장 완료: " + fileName);
         } catch (Exception e) {
-            System.err.println("파일 저장 중 오류 발생 (" + post.getJobId() + "): " + e.getMessage());
+            System.err.println("파일 저장 중 오류 발생 (" + post.getPostId() + "): " + e.getMessage());
         }
     }
 

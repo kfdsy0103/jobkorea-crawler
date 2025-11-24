@@ -32,6 +32,18 @@ spring:
         options:
           model: text-embedding-3-small
   mandatory-file-encoding: UTF-8
+  datasource:
+    url: jdbc:postgresql://localhost:5432/naviktest
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 logging:
   pattern:

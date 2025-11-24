@@ -46,6 +46,15 @@ dependencies {
     // WebClient
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+    // PGVector
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
+
+    // Spring Data JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // PostgreSQL
+    runtimeOnly 'org.postgresql:postgresql'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     compileOnly 'org.projectlombok:lombok'
