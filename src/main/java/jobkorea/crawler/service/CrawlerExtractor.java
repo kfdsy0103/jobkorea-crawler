@@ -11,6 +11,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.safety.Safelist;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -128,11 +129,15 @@ public class CrawlerExtractor {
     }
 
     public String extractQualification(WebDriverWait wait) {
-        WebElement qualificationSection = wait.until(ExpectedConditions.presenceOfElementLocated(
-                By.cssSelector("div[data-sentry-component='Qualification']")
-        ));
-        String rawHtml = qualificationSection.getAttribute("innerHTML");
-        return extractQualification(rawHtml);
+        try {
+            WebElement qualificationSection = wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.cssSelector("div[data-sentry-component='Qualification']")
+            ));
+            String rawHtml = qualificationSection.getAttribute("innerHTML");
+            return extractQualification(rawHtml);
+        } catch (TimeoutException exception) {
+            return "자격 요건 정보 없음";
+        }
     }
 
     private String extractQualification(String rawHtml) {
